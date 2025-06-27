@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>방사선 검출기</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 메인 화면 -->
+        <div id="main-view" class="view active">
+            <header class="app-header">
+                <h1>방사선 검출기</h1>
+                <button class="btn btn--secondary btn--sm" id="settings-btn">
+                    <span>⚙️</span>
+                </button>
+            </header>
+
+            <div class="detection-display">
+                <div class="status-indicator" id="status-indicator">
+                    <div class="status-light" id="status-light"></div>
+                    <span class="status-text" id="status-text">대기 중</span>
+                </div>
+
+                <div class="radiation-reading">
+                    <div class="reading-value" id="radiation-value">0.00</div>
+                    <div class="reading-unit">μSv/h</div>
+                </div>
+
+                <div class="reliability-indicator">
+                    <span>측정 신뢰도: </span>
+                    <span id="reliability">--</span>
+                </div>
+            </div>
+
+            <div class="control-panel">
+                <button class="btn btn--primary btn--lg" id="start-stop-btn">
+                    <span id="btn-text">검출 시작</span>
+                </button>
+                
+                <div class="secondary-controls">
+                    <button class="btn btn--outline" id="history-btn">측정 기록</button>
+                    <button class="btn btn--outline" id="help-btn">사용법</button>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <canvas id="radiation-chart" width="400" height="200"></canvas>
+            </div>
+
+            <div class="info-panel">
+                <div class="info-item">
+                    <span class="info-label">안정화 시간:</span>
+                    <span id="stabilization-time">--</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">측정 시간:</span>
+                    <span id="measurement-time">00:00</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">배터리:</span>
+                    <span id="battery-level">100%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 설정 화면 -->
+        <div id="settings-view" class="view">
+            <header class="app-header">
+                <button class="btn btn--secondary btn--sm" id="back-btn">
+                    <span>←</span>
+                </button>
+                <h1>설정</h1>
+                <div></div>
+            </header>
+
+            <div class="settings-content">
+                <div class="card">
+                    <div class="card__body">
+                        <h3>알림 설정</h3>
+                        <div class="form-group">
+                            <label class="form-label">주의 임계값 (μSv/h)</label>
+                            <input type="number" class="form-control" id="caution-threshold" value="0.1" step="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">위험 임계값 (μSv/h)</label>
+                            <input type="number" class="form-control" id="danger-threshold" value="1.0" step="0.1">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">
+                                <input type="checkbox" id="sound-alerts" checked> 
+                                소리 알림
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">
+                                <input type="checkbox" id="vibration-alerts" checked> 
+                                진동 알림
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card__body">
+                        <h3>캘리브레이션</h3>
+                        <div class="form-group">
+                            <label class="form-label">센서 감도</label>
+                            <input type="range" class="form-control" id="sensitivity" min="0.5" max="2.0" step="0.1" value="1.0">
+                            <span id="sensitivity-value">1.0</span>
+                        </div>
+                        <button class="btn btn--secondary" id="calibrate-btn">자동 캘리브레이션</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 측정 기록 화면 -->
+        <div id="history-view" class="view">
+            <header class="app-header">
+                <button class="btn btn--secondary btn--sm" id="history-back-btn">
+                    <span>←</span>
+                </button>
+                <h1>측정 기록</h1>
+                <button class="btn btn--secondary btn--sm" id="clear-history-btn">
+                    <span>🗑️</span>
+                </button>
+            </header>
+
+            <div class="history-content">
+                <div class="history-stats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="total-measurements">0</div>
+                        <div class="stat-label">총 측정</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="avg-radiation">0.00</div>
+                        <div class="stat-label">평균 (μSv/h)</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="max-radiation">0.00</div>
+                        <div class="stat-label">최대 (μSv/h)</div>
+                    </div>
+                </div>
+
+                <div class="history-table" id="history-table">
+                    <div class="table-header">
+                        <div>시간</div>
+                        <div>수치</div>
+                        <div>상태</div>
+                    </div>
+                    <div class="table-body" id="history-tbody">
+                        <div class="no-data">측정 기록이 없습니다</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 도움말 화면 -->
+        <div id="help-view" class="view">
+            <header class="app-header">
+                <button class="btn btn--secondary btn--sm" id="help-back-btn">
+                    <span>←</span>
+                </button>
+                <h1>사용법</h1>
+                <div></div>
+            </header>
+
+            <div class="help-content">
+                <div class="card">
+                    <div class="card__body">
+                        <h3>방사선 검출 방법</h3>
+                        <p>이 앱은 스마트폰의 CMOS 센서를 활용하여 방사선을 검출합니다.</p>
+                        <ol>
+                            <li>카메라 렌즈를 완전히 차단하세요</li>
+                            <li>'검출 시작' 버튼을 누르세요</li>
+                            <li>4-10분의 안정화 시간을 기다리세요</li>
+                            <li>실시간 측정값을 확인하세요</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card__body">
+                        <h3>안전 수준</h3>
+                        <div class="safety-levels">
+                            <div class="safety-level">
+                                <div class="level-indicator safe"></div>
+                                <div>
+                                    <strong>안전</strong>
+                                    <span>&lt; 0.1 μSv/h</span>
+                                </div>
+                            </div>
+                            <div class="safety-level">
+                                <div class="level-indicator caution"></div>
+                                <div>
+                                    <strong>주의</strong>
+                                    <span>0.1-1.0 μSv/h</span>
+                                </div>
+                            </div>
+                            <div class="safety-level">
+                                <div class="level-indicator danger"></div>
+                                <div>
+                                    <strong>위험</strong>
+                                    <span>&gt; 1.0 μSv/h</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card__body">
+                        <h3>주의사항</h3>
+                        <ul>
+                            <li>측정 시 스마트폰을 안정적으로 고정하세요</li>
+                            <li>배터리 수준이 낮으면 측정 정확도가 떨어질 수 있습니다</li>
+                            <li>온도 변화가 심한 곳에서는 측정을 피하세요</li>
+                            <li>정확한 측정을 위해 정기적으로 캘리브레이션하세요</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
